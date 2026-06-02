@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPE & Certification Tracker</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3250;
+    --accent: #4f7ef8;
+    --accent2: #38c7a0;
+    --warn: #f5a623;
+    --danger: #e05252;
+    --success: #38c7a0;
+    --text: #e8eaf0;
+    --text2: #8b91ab;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* NAV */
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 4px; position: sticky; top: 0; z-index: 100; }
+  nav .brand { font-weight: 700; font-size: 15px; color: var(--accent); padding: 14px 12px 14px 0; border-right: 1px solid var(--border); margin-right: 8px; white-space: nowrap; }
+  nav button { background: none; border: none; color: var(--text2); padding: 14px 16px; cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; transition: all .15s; }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* LAYOUT */
+  main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+  h2 { font-size: 18px; font-weight: 600; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+  h2 .badge { background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar input[type=text], .toolbar select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 7px 12px; border-radius: var(--radius); font-size: 13px; outline: none; }
+  .toolbar input[type=text]:focus, .toolbar select:focus { border-color: var(--accent); }
+  .toolbar .spacer { flex: 1; }
+  button.btn { padding: 7px 16px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: opacity .15s; }
+  button.btn:hover { opacity: .85; }
+  button.btn-primary { background: var(--accent); color: #fff; }
+  button.btn-success { background: var(--success); color: #000; }
+  button.btn-warn { background: var(--warn); color: #000; }
+  button.btn-danger { background: var(--danger); color: #fff; }
+  button.btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--surface2); }
+  th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+  th:hover { color: var(--text); }
+  th .sort-icon { margin-left: 4px; opacity: .5; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(79,126,248,.05); }
+  td .actions { display: flex; gap: 6px; }
+  td .icon-btn { background: none; border: none; color: var(--text2); cursor: pointer; padding: 4px; border-radius: 4px; font-size: 15px; line-height: 1; }
+  td .icon-btn:hover { color: var(--text); background: var(--surface2); }
+
+  /* CHIPS */
+  .chip { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .chip-blue { background: rgba(79,126,248,.2); color: #7da4fc; }
+  .chip-green { background: rgba(56,199,160,.2); color: #4dd4aa; }
+  .chip-orange { background: rgba(245,166,35,.2); color: #f7be5c; }
+  .chip-red { background: rgba(224,82,82,.2); color: #e87878; }
+  .chip-gray { background: rgba(139,145,171,.15); color: var(--text2); }
+  .chip-purple { background: rgba(160,110,240,.2); color: #c38ef5; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: min(700px, 95vw); max-height: 90vh; overflow-y: auto; padding: 28px; }
+  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+  input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: var(--radius); font-size: 13px; outline: none; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 70px; }
+  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .file-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 14px; text-align: center; cursor: pointer; transition: border-color .15s; color: var(--text2); font-size: 12px; }
+  .file-zone:hover { border-color: var(--accent); color: var(--text); }
+  .file-zone.has-file { border-color: var(--success); color: var(--success); }
+
+  /* DASHBOARD */
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .cert-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .cert-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .cert-card .body { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+  .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .progress-label { font-size: 12px; color: var(--text2); width: 110px; flex-shrink: 0; }
+  .progress-bar { flex: 1; height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+  .progress-val { font-size: 12px; font-weight: 600; width: 60px; text-align: right; flex-shrink: 0; }
+  .stat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .stat { background: var(--surface2); border-radius: var(--radius); padding: 8px 12px; flex: 1; min-width: 70px; }
+  .stat .val { font-size: 18px; font-weight: 700; }
+  .stat .lbl { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+  .alert-banner { background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.3); border-radius: var(--radius); padding: 10px 16px; margin-bottom: 16px; font-size: 13px; color: var(--warn); display: flex; align-items: center; gap: 8px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 48px; color: var(--text2); }
+  .empty .icon { font-size: 36px; margin-bottom: 10px; }
+  .empty p { font-size: 14px; }
+
+  /* MISC */
+  .link-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12px; text-decoration: underline; padding: 0; }
+  .text-success { color: var(--success); }
+  .text-warn { color: var(--warn); }
+  .text-danger { color: var(--danger); }
+  .text-muted { color: var(--text2); }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: var(--radius); font-size: 13px; opacity: 0; transition: opacity .3s; z-index: 999; pointer-events: none; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">🛡 CPE Tracker</div>
+  <button class="active" onclick="showSection('dashboard')">Dashboard</button>
+  <button onclick="showSection('activities')">CPE Activities</button>
+  <button onclick="showSection('certifications')">Certifications</button>
+  <button onclick="showSection('mapping')">Mapping</button>
+</nav>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div id="sec-dashboard" class="section active">
+    <h2>Dashboard <span class="badge" id="dash-cert-count">0 certs</span></h2>
+    <div id="dash-alerts"></div>
+    <div class="dash-grid" id="dash-cards"></div>
+    <div id="dash-empty" class="empty" style="display:none">
+      <div class="icon">📊</div>
+      <p>Add certifications and map CPE activities to see your dashboard.</p>
+    </div>
+  </div>
+
+  <!-- CPE ACTIVITIES -->
+  <div id="sec-activities" class="section">
+    <h2>CPE Activities <span class="badge" id="act-count-badge">0</span></h2>
+    <div class="toolbar">
+      <input type="text" id="act-search" placeholder="Search activities…" oninput="renderActivities()">
+      <select id="act-filter-cat" onchange="renderActivities()">
+        <option value="">All Categories</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openActivityModal()">+ Add Activity</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('activities','date')">Date <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('activities','title')">Title <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('activities','provider')">Provider <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('activities','category')">Category <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('activities','hours')">Hours <span class="sort-icon">↕</span></th>
+            <th>Description</th>
+            <th>Evidence</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="act-tbody"></tbody>
+      </table>
+    </div>
+    <div id="act-empty" class="empty" style="display:none">
+      <div class="icon">📝</div>
+      <p>No activities yet. Click <strong>+ Add Activity</strong> to get started.</p>
+    </div>
+  </div>
+
+  <!-- CERTIFICATIONS -->
+  <div id="sec-certifications" class="section">
+    <h2>Certifications <span class="badge" id="cert-count-badge">0</span></h2>
+    <div class="toolbar">
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openCertModal()">+ Add Certification</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Certification</th>
+            <th>Body</th>
+            <th>Cycle Start</th>
+            <th>Cycle End</th>
+            <th>Annual Min (hrs)</th>
+            <th>Cycle Total (hrs)</th>
+            <th>Fee Due Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cert-tbody"></tbody>
+      </table>
+    </div>
+    <div id="cert-empty" class="empty" style="display:none">
+      <div class="icon">🏅</div>
+      <p>No certifications yet. Click <strong>+ Add Certification</strong> to get started.</p>
+    </div>
+  </div>
+
+  <!-- MAPPING -->
+  <div id="sec-mapping" class="section">
+    <h2>Activity → Certification Mapping <span class="badge" id="map-count-badge">0</span></h2>
+    <div class="toolbar">
+      <select id="map-filter-cert" onchange="renderMapping()">
+        <option value="">All Certifications</option>
+      </select>
+      <select id="map-filter-submitted" onchange="renderMapping()">
+        <option value="">All Statuses</option>
+        <option value="yes">Submitted</option>
+        <option value="no">Not Submitted</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openMappingModal()">+ Add Mapping</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Certification</th>
+            <th>Eligible Hours</th>
+            <th>Submitted</th>
+            <th>Submission Date</th>
+            <th>Evidence Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="map-tbody"></tbody>
+      </table>
+    </div>
+    <div id="map-empty" class="empty" style="display:none">
+      <div class="icon">🔗</div>
+      <p>No mappings yet. Add activities and certifications first, then map them here.</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- ACTIVITY MODAL -->
+<div class="modal-overlay" id="act-modal">
+  <div class="modal">
+    <h3 id="act-modal-title">Add CPE Activity</h3>
+    <div class="form-grid">
+      <div>
+        <label>Date *</label>
+        <input type="date" id="act-date">
+      </div>
+      <div>
+        <label>Hours *</label>
+        <input type="number" id="act-hours" min="0.25" step="0.25" placeholder="e.g. 1.5">
+      </div>
+      <div class="full">
+        <label>Title *</label>
+        <input type="text" id="act-title" placeholder="e.g. SANS Webinar: Zero Trust Architecture">
+      </div>
+      <div>
+        <label>Provider</label>
+        <input type="text" id="act-provider" placeholder="e.g. SANS Institute">
+      </div>
+      <div>
+        <label>Category *</label>
+        <select id="act-category">
+          <option value="">Select category…</option>
+          <option>Training / Course</option>
+          <option>Webinar / Seminar</option>
+          <option>Conference</option>
+          <option>Self-Study</option>
+          <option>Research / Writing</option>
+          <option>Volunteer / Teaching</option>
+          <option>Exam / Certification</option>
+          <option>Work Experience</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="full">
+        <label>Description</label>
+        <textarea id="act-description" placeholder="Brief description of the activity…"></textarea>
+      </div>
+      <div>
+        <label>URL / Reference</label>
+        <input type="url" id="act-url" placeholder="https://…">
+      </div>
+      <div>
+        <label>Notes</label>
+        <input type="text" id="act-notes" placeholder="Optional notes…">
+      </div>
+      <div class="full">
+        <label>Evidence File</label>
+        <div class="file-zone" id="act-file-zone" onclick="document.getElementById('act-file-input').click()">
+          <div id="act-file-label">📎 Click to attach evidence file (PDF, image, etc.)</div>
+          <input type="file" id="act-file-input" style="display:none" accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.txt,.zip" onchange="handleFileSelect(this)">
+        </div>
+        <div id="act-file-preview" style="margin-top:6px;font-size:12px;color:var(--success);display:none"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('act-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveActivity()">Save Activity</button>
+    </div>
+  </div>
+</div>
+
+<!-- CERT MODAL -->
+<div class="modal-overlay" id="cert-modal">
+  <div class="modal">
+    <h3 id="cert-modal-title">Add Certification</h3>
+    <div class="form-grid">
+      <div>
+        <label>Certification Name *</label>
+        <input type="text" id="cert-name" placeholder="e.g. CISSP">
+      </div>
+      <div>
+        <label>Issuing Body *</label>
+        <input type="text" id="cert-body" placeholder="e.g. ISC²">
+      </div>
+      <div>
+        <label>Renewal Cycle Start *</label>
+        <input type="date" id="cert-start">
+      </div>
+      <div>
+        <label>Renewal Cycle End *</label>
+        <input type="date" id="cert-end">
+      </div>
+      <div>
+        <label>Annual Minimum (hrs)</label>
+        <input type="number" id="cert-annual-min" min="0" step="1" placeholder="e.g. 40">
+      </div>
+      <div>
+        <label>Cycle Total (hrs) *</label>
+        <input type="number" id="cert-cycle-total" min="1" step="1" placeholder="e.g. 120">
+      </div>
+      <div>
+        <label>Fee Due Date</label>
+        <input type="date" id="cert-fee-date">
+      </div>
+      <div>
+        <label>Member/Cert ID</label>
+        <input type="text" id="cert-id" placeholder="Optional ID">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('cert-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCert()">Save Certification</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAPPING MODAL -->
+<div class="modal-overlay" id="map-modal">
+  <div class="modal">
+    <h3 id="map-modal-title">Add Mapping</h3>
+    <div class="form-grid">
+      <div class="full">
+        <label>Activity *</label>
+        <select id="map-activity"></select>
+      </div>
+      <div class="full">
+        <label>Certification *</label>
+        <select id="map-cert"></select>
+      </div>
+      <div>
+        <label>Eligible Hours *</label>
+        <input type="number" id="map-hours" min="0.25" step="0.25" placeholder="Hours applicable">
+      </div>
+      <div>
+        <label>Submitted?</label>
+        <select id="map-submitted">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+        </select>
+      </div>
+      <div>
+        <label>Submission Date</label>
+        <input type="date" id="map-sub-date">
+      </div>
+      <div>
+        <label>Evidence Status</label>
+        <select id="map-evidence">
+          <option value="not_required">Not Required</option>
+          <option value="pending">Pending</option>
+          <option value="attached">Attached</option>
+          <option value="submitted">Submitted</option>
+          <option value="missing">Missing</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('map-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMapping()">Save Mapping</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVIDENCE VIEWER MODAL -->
+<div class="modal-overlay" id="evidence-modal">
+  <div class="modal">
+    <h3 id="ev-modal-title">Evidence File</h3>
+    <div id="ev-modal-body" style="text-align:center; padding:10px 0;"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('evidence-modal')">Close</button>
+      <button class="btn btn-primary" id="ev-download-btn">Download</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let db = loadDB();
+let editingId = { activities: null, certifications: null, mapping: null };
+let pendingFile = null;
+let sortState = { activities: { col: 'date', dir: 'desc' } };
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem('cpe_tracker_v2');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { activities: [], certifications: [], mapping: [] };
+}
+
+function saveDB() {
+  localStorage.setItem('cpe_tracker_v2', JSON.stringify(db));
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ─── SEED DATA ────────────────────────────────────────────────────────────────
+if (db.certifications.length === 0) {
+  const today = new Date();
+  const y = today.getFullYear();
+  db.certifications = [
+    { id: uid(), name: 'CISSP', body: 'ISC²', start: `${y-1}-01-01`, end: `${y+2}-12-31`, annualMin: 40, cycleTotal: 120, feeDue: `${y}-01-31`, certId: '' },
+    { id: uid(), name: 'CISM', body: 'ISACA', start: `${y-1}-04-01`, end: `${y+2}-03-31`, annualMin: 20, cycleTotal: 120, feeDue: `${y}-04-30`, certId: '' },
+    { id: uid(), name: 'Security+', body: 'CompTIA', start: `${y}-06-01`, end: `${y+3}-05-31`, annualMin: 0, cycleTotal: 50, feeDue: '', certId: '' },
+    { id: uid(), name: 'CySA+', body: 'CompTIA', start: `${y}-06-01`, end: `${y+3}-05-31`, annualMin: 0, cycleTotal: 60, feeDue: '', certId: '' },
+    { id: uid(), name: 'CEH', body: 'EC-Council', start: `${y}-01-01`, end: `${y+2}-12-31`, annualMin: 0, cycleTotal: 120, feeDue: `${y}-12-31`, certId: '' },
+    { id: uid(), name: 'CISA', body: 'ISACA', start: `${y-1}-04-01`, end: `${y+2}-03-31`, annualMin: 20, cycleTotal: 120, feeDue: `${y}-04-30`, certId: '' },
+    { id: uid(), name: 'CRISC', body: 'ISACA', start: `${y-1}-04-01`, end: `${y+2}-03-31`, annualMin: 20, cycleTotal: 120, feeDue: `${y}-04-30`, certId: '' },
+  ];
+  saveDB();
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'activities') renderActivities();
+  if (id === 'certifications') renderCertifications();
+  if (id === 'mapping') renderMapping();
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  pendingFile = null;
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+});
+
+// ─── FILE HANDLING ────────────────────────────────────────────────────────────
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
+    const zone = document.getElementById('act-file-zone');
+    zone.classList.add('has-file');
+    document.getElementById('act-file-label').textContent = '✅ ' + file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function viewEvidence(actId) {
+  const act = db.activities.find(a => a.id === actId);
+  if (!act || !act.file) return;
+  const body = document.getElementById('ev-modal-body');
+  document.getElementById('ev-modal-title').textContent = act.file.name;
+  if (act.file.type && act.file.type.startsWith('image/')) {
+    body.innerHTML = `<img src="${act.file.data}" style="max-width:100%;border-radius:6px;">`;
+  } else if (act.file.type === 'application/pdf') {
+    body.innerHTML = `<embed src="${act.file.data}" type="application/pdf" width="100%" height="400px">`;
+  } else {
+    body.innerHTML = `<p style="color:var(--text2);padding:20px;">Preview not available for this file type.<br>Use the Download button below.</p>`;
+  }
+  const dlBtn = document.getElementById('ev-download-btn');
+  dlBtn.onclick = () => {
+    const a = document.createElement('a');
+    a.href = act.file.data;
+    a.download = act.file.name;
+    a.click();
+  };
+  document.getElementById('evidence-modal').classList.add('open');
+}
+
+// ─── ACTIVITIES ───────────────────────────────────────────────────────────────
+function openActivityModal(id) {
+  editingId.activities = id || null;
+  const act = id ? db.activities.find(a => a.id === id) : null;
+  document.getElementById('act-modal-title').textContent = id ? 'Edit CPE Activity' : 'Add CPE Activity';
+  document.getElementById('act-date').value = act?.date || new Date().toISOString().slice(0,10);
+  document.getElementById('act-title').value = act?.title || '';
+  document.getElementById('act-provider').value = act?.provider || '';
+  document.getElementById('act-category').value = act?.category || '';
+  document.getElementById('act-hours').value = act?.hours || '';
+  document.getElementById('act-description').value = act?.description || '';
+  document.getElementById('act-url').value = act?.url || '';
+  document.getElementById('act-notes').value = act?.notes || '';
+  const zone = document.getElementById('act-file-zone');
+  zone.classList.remove('has-file');
+  document.getElementById('act-file-label').textContent = '📎 Click to attach evidence file (PDF, image, etc.)';
+  document.getElementById('act-file-input').value = '';
+  pendingFile = act?.file || null;
+  if (act?.file) {
+    zone.classList.add('has-file');
+    document.getElementById('act-file-label').textContent = '✅ ' + act.file.name;
+  }
+  document.getElementById('act-modal').classList.add('open');
+}
+
+function saveActivity() {
+  const title = document.getElementById('act-title').value.trim();
+  const date = document.getElementById('act-date').value;
+  const hours = parseFloat(document.getElementById('act-hours').value);
+  const category = document.getElementById('act-category').value;
+  if (!title || !date || !hours || !category) { toast('⚠️ Title, date, hours, and category are required.'); return; }
+
+  const obj = {
+    id: editingId.activities || uid(),
+    date, title,
+    provider: document.getElementById('act-provider').value.trim(),
+    category,
+    hours,
+    description: document.getElementById('act-description').value.trim(),
+    url: document.getElementById('act-url').value.trim(),
+    notes: document.getElementById('act-notes').value.trim(),
+    file: pendingFile || null,
+  };
+
+  if (editingId.activities) {
+    const idx = db.activities.findIndex(a => a.id === editingId.activities);
+    db.activities[idx] = obj;
+  } else {
+    db.activities.push(obj);
+  }
+  saveDB();
+  closeModal('act-modal');
+  renderActivities();
+  toast(editingId.activities ? '✅ Activity updated.' : '✅ Activity added.');
+}
+
+function deleteActivity(id) {
+  if (!confirm('Delete this activity? Any mappings using it will also be removed.')) return;
+  db.activities = db.activities.filter(a => a.id !== id);
+  db.mapping = db.mapping.filter(m => m.activityId !== id);
+  saveDB();
+  renderActivities();
+  renderMapping();
+  toast('🗑️ Activity deleted.');
+}
+
+function sortTable(type, col) {
+  if (!sortState[type]) sortState[type] = { col, dir: 'asc' };
+  else if (sortState[type].col === col) sortState[type].dir = sortState[type].dir === 'asc' ? 'desc' : 'asc';
+  else { sortState[type].col = col; sortState[type].dir = 'asc'; }
+  if (type === 'activities') renderActivities();
+}
+
+function renderActivities() {
+  const search = document.getElementById('act-search').value.toLowerCase();
+  const catFilter = document.getElementById('act-filter-cat').value;
+
+  // Update category filter options
+  const cats = [...new Set(db.activities.map(a => a.category).filter(Boolean))].sort();
+  const catSel = document.getElementById('act-filter-cat');
+  const curCat = catSel.value;
+  catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option ${c===curCat?'selected':''}>${c}</option>`).join('');
+
+  let items = db.activities.filter(a => {
+    const matchSearch = !search || [a.title, a.provider, a.category, a.description, a.notes].join(' ').toLowerCase().includes(search);
+    const matchCat = !catFilter || a.category === catFilter;
+    return matchSearch && matchCat;
+  });
+
+  const { col, dir } = sortState.activities || { col: 'date', dir: 'desc' };
+  items.sort((a, b) => {
+    let va = a[col] ?? '', vb = b[col] ?? '';
+    if (col === 'hours') { va = parseFloat(va); vb = parseFloat(vb); }
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const tbody = document.getElementById('act-tbody');
+  document.getElementById('act-count-badge').textContent = db.activities.length;
+
+  if (items.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('act-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('act-empty').style.display = 'none';
+
+  const catColors = {'Training / Course':'chip-blue','Webinar / Seminar':'chip-purple','Conference':'chip-orange','Self-Study':'chip-green','Research / Writing':'chip-green','Volunteer / Teaching':'chip-accent2','Exam / Certification':'chip-orange','Work Experience':'chip-gray','Other':'chip-gray'};
+
+  tbody.innerHTML = items.map(a => `
+    <tr>
+      <td style="white-space:nowrap">${a.date}</td>
+      <td><strong>${esc(a.title)}</strong></td>
+      <td>${esc(a.provider || '—')}</td>
+      <td><span class="chip ${catColors[a.category]||'chip-gray'}">${esc(a.category)}</span></td>
+      <td><strong>${a.hours}</strong></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(a.description)}">${esc(a.description || '—')}</td>
+      <td>${a.file
+        ? `<button class="link-btn" onclick="viewEvidence('${a.id}')">📎 ${esc(a.file.name)}</button>`
+        : (a.url ? `<a href="${esc(a.url)}" target="_blank" class="link-btn">🔗 Link</a>` : '<span class="text-muted">—</span>')
+      }</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.notes || '—')}</td>
+      <td><div class="actions">
+        <button class="icon-btn" title="Edit" onclick="openActivityModal('${a.id}')">✏️</button>
+        <button class="icon-btn" title="Delete" onclick="deleteActivity('${a.id}')">🗑️</button>
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+// ─── CERTIFICATIONS ───────────────────────────────────────────────────────────
+function openCertModal(id) {
+  editingId.certifications = id || null;
+  const cert = id ? db.certifications.find(c => c.id === id) : null;
+  document.getElementById('cert-modal-title').textContent = id ? 'Edit Certification' : 'Add Certification';
+  document.getElementById('cert-name').value = cert?.name || '';
+  document.getElementById('cert-body').value = cert?.body || '';
+  document.getElementById('cert-start').value = cert?.start || '';
+  document.getElementById('cert-end').value = cert?.end || '';
+  document.getElementById('cert-annual-min').value = cert?.annualMin || '';
+  document.getElementById('cert-cycle-total').value = cert?.cycleTotal || '';
+  document.getElementById('cert-fee-date').value = cert?.feeDue || '';
+  document.getElementById('cert-id').value = cert?.certId || '';
+  document.getElementById('cert-modal').classList.add('open');
+}
+
+function saveCert() {
+  const name = document.getElementById('cert-name').value.trim();
+  const body = document.getElementById('cert-body').value.trim();
+  const start = document.getElementById('cert-start').value;
+  const end = document.getElementById('cert-end').value;
+  const cycleTotal = parseInt(document.getElementById('cert-cycle-total').value);
+  if (!name || !body || !start || !end || !cycleTotal) { toast('⚠️ Name, body, cycle dates, and total hours are required.'); return; }
+
+  const obj = {
+    id: editingId.certifications || uid(),
+    name, body, start, end,
+    annualMin: parseInt(document.getElementById('cert-annual-min').value) || 0,
+    cycleTotal,
+    feeDue: document.getElementById('cert-fee-date').value,
+    certId: document.getElementById('cert-id').value.trim(),
+  };
+
+  if (editingId.certifications) {
+    const idx = db.certifications.findIndex(c => c.id === editingId.certifications);
+    db.certifications[idx] = obj;
+  } else {
+    db.certifications.push(obj);
+  }
+  saveDB();
+  closeModal('cert-modal');
+  renderCertifications();
+  toast(editingId.certifications ? '✅ Certification updated.' : '✅ Certification added.');
+}
+
+function deleteCert(id) {
+  if (!confirm('Delete this certification? All associated mappings will also be removed.')) return;
+  db.certifications = db.certifications.filter(c => c.id !== id);
+  db.mapping = db.mapping.filter(m => m.certId !== id);
+  saveDB();
+  renderCertifications();
+  renderMapping();
+  toast('🗑️ Certification deleted.');
+}
+
+function renderCertifications() {
+  const today = new Date();
+  document.getElementById('cert-count-badge').textContent = db.certifications.length;
+  const tbody = document.getElementById('cert-tbody');
+
+  if (db.certifications.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('cert-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('cert-empty').style.display = 'none';
+
+  tbody.innerHTML = db.certifications.map(c => {
+    const end = new Date(c.end);
+    const daysLeft = Math.round((end - today) / 86400000);
+    let statusChip;
+    if (daysLeft < 0) statusChip = '<span class="chip chip-red">Expired</span>';
+    else if (daysLeft < 90) statusChip = `<span class="chip chip-orange">Expires in ${daysLeft}d</span>`;
+    else statusChip = '<span class="chip chip-green">Active</span>';
+
+    return `
+      <tr>
+        <td><strong>${esc(c.name)}</strong>${c.certId ? `<br><span class="text-muted" style="font-size:11px">${esc(c.certId)}</span>` : ''}</td>
+        <td>${esc(c.body)}</td>
+        <td>${c.start}</td>
+        <td>${c.end}</td>
+        <td>${c.annualMin || '—'}</td>
+        <td>${c.cycleTotal}</td>
+        <td>${c.feeDue || '—'}</td>
+        <td>${statusChip}</td>
+        <td><div class="actions">
+          <button class="icon-btn" title="Edit" onclick="openCertModal('${c.id}')">✏️</button>
+          <button class="icon-btn" title="Delete" onclick="deleteCert('${c.id}')">🗑️</button>
+        </div></td>
+      </tr>`;
+  }).join('');
+}
+
+// ─── MAPPING ─────────────────────────────────────────────────────────────────
+function openMappingModal(id) {
+  editingId.mapping = id || null;
+  const map = id ? db.mapping.find(m => m.id === id) : null;
+  document.getElementById('map-modal-title').textContent = id ? 'Edit Mapping' : 'Add Mapping';
+
+  const actSel = document.getElementById('map-activity');
+  actSel.innerHTML = db.activities.map(a => `<option value="${a.id}" ${map?.activityId===a.id?'selected':''}>${a.date} — ${esc(a.title)} (${a.hours}h)</option>`).join('');
+  if (!actSel.innerHTML) actSel.innerHTML = '<option>No activities yet</option>';
+
+  const certSel = document.getElementById('map-cert');
+  certSel.innerHTML = db.certifications.map(c => `<option value="${c.id}" ${map?.certId===c.id?'selected':''}>${esc(c.name)} (${c.body})</option>`).join('');
+  if (!certSel.innerHTML) certSel.innerHTML = '<option>No certifications yet</option>';
+
+  document.getElementById('map-hours').value = map?.eligibleHours || (db.activities[0]?.hours || '');
+  document.getElementById('map-submitted').value = map?.submitted || 'no';
+  document.getElementById('map-sub-date').value = map?.submissionDate || '';
+  document.getElementById('map-evidence').value = map?.evidenceStatus || 'pending';
+
+  // Auto-fill hours when activity changes
+  actSel.onchange = () => {
+    const act = db.activities.find(a => a.id === actSel.value);
+    if (act) document.getElementById('map-hours').value = act.hours;
+  };
+
+  document.getElementById('map-modal').classList.add('open');
+}
+
+function saveMapping() {
+  const activityId = document.getElementById('map-activity').value;
+  const certId = document.getElementById('map-cert').value;
+  const eligibleHours = parseFloat(document.getElementById('map-hours').value);
+  if (!activityId || !certId || !eligibleHours) { toast('⚠️ Activity, certification, and eligible hours are required.'); return; }
+
+  // Check for duplicate (different id)
+  const dup = db.mapping.find(m => m.activityId === activityId && m.certId === certId && m.id !== editingId.mapping);
+  if (dup) { toast('⚠️ This activity is already mapped to that certification.'); return; }
+
+  const obj = {
+    id: editingId.mapping || uid(),
+    activityId, certId, eligibleHours,
+    submitted: document.getElementById('map-submitted').value,
+    submissionDate: document.getElementById('map-sub-date').value,
+    evidenceStatus: document.getElementById('map-evidence').value,
+  };
+
+  if (editingId.mapping) {
+    const idx = db.mapping.findIndex(m => m.id === editingId.mapping);
+    db.mapping[idx] = obj;
+  } else {
+    db.mapping.push(obj);
+  }
+  saveDB();
+  closeModal('map-modal');
+  renderMapping();
+  toast(editingId.mapping ? '✅ Mapping updated.' : '✅ Mapping added.');
+}
+
+function deleteMapping(id) {
+  if (!confirm('Remove this mapping?')) return;
+  db.mapping = db.mapping.filter(m => m.id !== id);
+  saveDB();
+  renderMapping();
+  toast('🗑️ Mapping removed.');
+}
+
+function renderMapping() {
+  const certFilter = document.getElementById('map-filter-cert').value;
+  const subFilter = document.getElementById('map-filter-submitted').value;
+
+  // Update cert filter
+  const certSel = document.getElementById('map-filter-cert');
+  const curCert = certSel.value;
+  certSel.innerHTML = '<option value="">All Certifications</option>' + db.certifications.map(c => `<option value="${c.id}" ${c.id===curCert?'selected':''}>${esc(c.name)}</option>`).join('');
+
+  let items = db.mapping.filter(m => {
+    const matchCert = !certFilter || m.certId === certFilter;
+    const matchSub = !subFilter || m.submitted === subFilter;
+    return matchCert && matchSub;
+  });
+
+  document.getElementById('map-count-badge').textContent = db.mapping.length;
+  const tbody = document.getElementById('map-tbody');
+
+  if (items.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('map-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('map-empty').style.display = 'none';
+
+  const evColors = { pending:'chip-orange', attached:'chip-blue', submitted:'chip-green', missing:'chip-red', not_required:'chip-gray' };
+  const evLabels = { pending:'Pending', attached:'Attached', submitted:'Submitted', missing:'⚠️ Missing', not_required:'N/A' };
+
+  tbody.innerHTML = items.map(m => {
+    const act = db.activities.find(a => a.id === m.activityId);
+    const cert = db.certifications.find(c => c.id === m.certId);
+    if (!act || !cert) return '';
+    return `
+      <tr>
+        <td>
+          <strong>${esc(act.title)}</strong><br>
+          <span class="text-muted" style="font-size:11px">${act.date} · ${act.hours}h · ${esc(act.category)}</span>
+        </td>
+        <td><strong>${esc(cert.name)}</strong><br><span class="text-muted" style="font-size:11px">${esc(cert.body)}</span></td>
+        <td><strong>${m.eligibleHours}h</strong></td>
+        <td>${m.submitted === 'yes'
+          ? '<span class="chip chip-green">Yes</span>'
+          : '<span class="chip chip-gray">No</span>'}</td>
+        <td>${m.submissionDate || '—'}</td>
+        <td><span class="chip ${evColors[m.evidenceStatus]||'chip-gray'}">${evLabels[m.evidenceStatus]||m.evidenceStatus}</span></td>
+        <td><div class="actions">
+          <button class="icon-btn" title="Edit" onclick="openMappingModal('${m.id}')">✏️</button>
+          <button class="icon-btn" title="Delete" onclick="deleteMapping('${m.id}')">🗑️</button>
+        </div></td>
+      </tr>`;
+  }).join('');
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const today = new Date();
+  const certs = db.certifications;
+  document.getElementById('dash-cert-count').textContent = certs.length + ' cert' + (certs.length !== 1 ? 's' : '');
+
+  // Alerts
+  const alertsEl = document.getElementById('dash-alerts');
+  const alerts = [];
+  certs.forEach(c => {
+    const daysToFee = c.feeDue ? Math.round((new Date(c.feeDue) - today) / 86400000) : null;
+    if (daysToFee !== null && daysToFee >= 0 && daysToFee <= 60) {
+      alerts.push(`${c.name} renewal fee due in <strong>${daysToFee} days</strong> (${c.feeDue})`);
+    }
+    const daysToExpiry = Math.round((new Date(c.end) - today) / 86400000);
+    if (daysToExpiry >= 0 && daysToExpiry <= 90) {
+      alerts.push(`${c.name} certification expires in <strong>${daysToExpiry} days</strong> (${c.end})`);
+    }
+  });
+  alertsEl.innerHTML = alerts.map(a => `<div class="alert-banner">⚠️ ${a}</div>`).join('');
+
+  const cardsEl = document.getElementById('dash-cards');
+  const emptyEl = document.getElementById('dash-empty');
+
+  if (certs.length === 0) {
+    cardsEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  cardsEl.innerHTML = certs.map(cert => {
+    const mappings = db.mapping.filter(m => m.certId === cert.id);
+    const earnedTotal = mappings.reduce((s, m) => s + m.eligibleHours, 0);
+    const submittedTotal = mappings.filter(m => m.submitted === 'yes').reduce((s, m) => s + m.eligibleHours, 0);
+    const remaining = Math.max(0, cert.cycleTotal - earnedTotal);
+    const missingEvidence = mappings.filter(m => m.evidenceStatus === 'missing').length;
+
+    // Annual gap calc
+    const cycleStart = new Date(cert.start);
+    const cycleEnd = new Date(cert.end);
+    const cycleMonths = Math.max(1, (cycleEnd - cycleStart) / (30.44 * 24 * 3600000));
+    const monthsElapsed = Math.max(0, (today - cycleStart) / (30.44 * 24 * 3600000));
+    const paceHoursNeeded = Math.min(cert.cycleTotal, (cert.cycleTotal / cycleMonths) * monthsElapsed);
+    const paceGap = Math.max(0, paceHoursNeeded - earnedTotal).toFixed(1);
+
+    const daysLeft = Math.round((cycleEnd - today) / 86400000);
+    const progressPct = Math.min(100, Math.round((earnedTotal / cert.cycleTotal) * 100));
+    const submitPct = Math.min(100, Math.round((submittedTotal / cert.cycleTotal) * 100));
+
+    const fillColor = progressPct >= 100 ? '#38c7a0' : progressPct >= 60 ? '#4f7ef8' : progressPct >= 30 ? '#f5a623' : '#e05252';
+
+    return `
+      <div class="cert-card">
+        <h3>${esc(cert.name)}</h3>
+        <div class="body">${esc(cert.body)} · Renews ${cert.end} · ${daysLeft >= 0 ? daysLeft + 'd left' : 'Expired'}</div>
+
+        <div class="progress-row">
+          <span class="progress-label">Earned</span>
+          <div class="progress-bar"><div class="progress-fill" style="width:${progressPct}%;background:${fillColor}"></div></div>
+          <span class="progress-val" style="color:${fillColor}">${earnedTotal}/${cert.cycleTotal}h</span>
+        </div>
+        <div class="progress-row">
+          <span class="progress-label">Submitted</span>
+          <div class="progress-bar"><div class="progress-fill" style="width:${submitPct}%;background:var(--success)"></div></div>
+          <span class="progress-val text-success">${submittedTotal}h</span>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <div class="val">${earnedTotal}h</div>
+            <div class="lbl">Earned</div>
+          </div>
+          <div class="stat">
+            <div class="val" style="color:var(--success)">${submittedTotal}h</div>
+            <div class="lbl">Submitted</div>
+          </div>
+          <div class="stat">
+            <div class="val" style="color:${remaining > 0 ? 'var(--warn)' : 'var(--success)'}">${remaining}h</div>
+            <div class="lbl">Remaining</div>
+          </div>
+          <div class="stat">
+            <div class="val" style="color:${parseFloat(paceGap) > 0 ? 'var(--danger)' : 'var(--success)'}">${paceGap}h</div>
+            <div class="lbl">Pace Gap</div>
+          </div>
+        </div>
+
+        ${missingEvidence > 0 ? `<div style="margin-top:12px;font-size:12px;color:var(--danger)">⚠️ ${missingEvidence} mapping(s) with missing evidence</div>` : ''}
+        ${cert.feeDue ? `<div style="margin-top:6px;font-size:12px;color:var(--text2)">💳 Fee due: ${cert.feeDue}</div>` : ''}
+        ${cert.annualMin > 0 ? `<div style="margin-top:4px;font-size:12px;color:var(--text2)">📅 Annual minimum: ${cert.annualMin}h/yr</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+// ─── UTILITY ─────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderDashboard();
+</script>
+</body>
+</html>
