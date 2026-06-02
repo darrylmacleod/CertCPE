@@ -116,9 +116,6 @@ Then refresh the page.
 |---|---|---|---|---|
 | CISSP | ISC² | 3 | 120 | 40 |
 | CISM | ISACA | 3 | 120 | 20 |
-| Security+ | CompTIA | 3 | 50 | — |
-| CySA+ | CompTIA | 3 | 60 | — |
-| CEH | EC-Council | 3 | 120 | — |
 | CISA | ISACA | 3 | 120 | 20 |
 | CRISC | ISACA | 3 | 120 | 20 |
 
