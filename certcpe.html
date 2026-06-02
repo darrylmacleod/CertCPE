@@ -317,6 +317,92 @@
 <div class="modal-overlay" id="cert-modal">
   <div class="modal">
     <h3 id="cert-modal-title">Add Certification</h3>
+    <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <label>Quick-select a certification</label>
+      <select id="cert-quickpick" onchange="applyQuickPick()" style="width:100%;margin-top:5px">
+        <option value="">— Select to auto-fill fields —</option>
+        <optgroup label="ISC²">
+          <option value="CISSP">CISSP — Certified Information Systems Security Professional</option>
+          <option value="SSCP">SSCP — Systems Security Certified Practitioner</option>
+          <option value="CCSP">CCSP — Certified Cloud Security Professional</option>
+          <option value="CSSLP">CSSLP — Certified Secure Software Lifecycle Professional</option>
+          <option value="CGRC">CGRC — Certified in Governance, Risk and Compliance</option>
+          <option value="CISSP-ISSAP">CISSP-ISSAP — Information Systems Security Architecture Professional</option>
+          <option value="CISSP-ISSEP">CISSP-ISSEP — Information Systems Security Engineering Professional</option>
+          <option value="CISSP-ISSMP">CISSP-ISSMP — Information Systems Security Management Professional</option>
+        </optgroup>
+        <optgroup label="ISACA">
+          <option value="CISM">CISM — Certified Information Security Manager</option>
+          <option value="CISA">CISA — Certified Information Systems Auditor</option>
+          <option value="CRISC">CRISC — Certified in Risk and Information Systems Control</option>
+          <option value="CDPSE">CDPSE — Certified Data Privacy Solutions Engineer</option>
+          <option value="CGEIT">CGEIT — Certified in the Governance of Enterprise IT</option>
+        </optgroup>
+        <optgroup label="CompTIA">
+          <option value="Security+">Security+ (SY0-701)</option>
+          <option value="CySA+">CySA+ — Cybersecurity Analyst</option>
+          <option value="PenTest+">PenTest+</option>
+          <option value="CASP+">CASP+ — Advanced Security Practitioner</option>
+          <option value="Cloud+">Cloud+</option>
+          <option value="Network+">Network+</option>
+        </optgroup>
+        <optgroup label="EC-Council">
+          <option value="CEH">CEH — Certified Ethical Hacker</option>
+          <option value="CPENT">CPENT — Certified Penetration Testing Professional</option>
+          <option value="CHFI">CHFI — Computer Hacking Forensic Investigator</option>
+          <option value="CCISO">CCISO — Certified Chief Information Security Officer</option>
+          <option value="ECSA">ECSA — EC-Council Certified Security Analyst</option>
+        </optgroup>
+        <optgroup label="GIAC / SANS">
+          <option value="GSEC">GSEC — GIAC Security Essentials</option>
+          <option value="GPEN">GPEN — GIAC Penetration Tester</option>
+          <option value="GCIH">GCIH — GIAC Certified Incident Handler</option>
+          <option value="GCIA">GCIA — GIAC Certified Intrusion Analyst</option>
+          <option value="GCFE">GCFE — GIAC Certified Forensic Examiner</option>
+          <option value="GCFA">GCFA — GIAC Certified Forensic Analyst</option>
+          <option value="GWAPT">GWAPT — GIAC Web Application Penetration Tester</option>
+          <option value="GXPN">GXPN — GIAC Exploit Researcher and Advanced Penetration Tester</option>
+          <option value="GREM">GREM — GIAC Reverse Engineering Malware</option>
+          <option value="GSTRT">GSTRT — GIAC Strategic Planning, Policy, and Leadership</option>
+        </optgroup>
+        <optgroup label="Offensive Security">
+          <option value="OSCP">OSCP — Offensive Security Certified Professional</option>
+          <option value="OSEP">OSEP — Offensive Security Experienced Penetration Tester</option>
+          <option value="OSWE">OSWE — Offensive Security Web Expert</option>
+          <option value="OSED">OSED — Offensive Security Exploit Developer</option>
+          <option value="OSEE">OSEE — Offensive Security Exploitation Expert</option>
+        </optgroup>
+        <optgroup label="Cloud Security">
+          <option value="AWS-SAA">AWS Certified Solutions Architect – Associate</option>
+          <option value="AWS-SAP">AWS Certified Solutions Architect – Professional</option>
+          <option value="AWS-SCS">AWS Certified Security – Specialty</option>
+          <option value="AZ-500">Microsoft AZ-500 — Azure Security Engineer</option>
+          <option value="SC-200">Microsoft SC-200 — Security Operations Analyst</option>
+          <option value="SC-300">Microsoft SC-300 — Identity and Access Administrator</option>
+          <option value="GCP-PCSE">Google Professional Cloud Security Engineer</option>
+        </optgroup>
+        <optgroup label="Privacy">
+          <option value="CIPP/US">CIPP/US — Certified Information Privacy Professional (US)</option>
+          <option value="CIPP/E">CIPP/E — Certified Information Privacy Professional (Europe)</option>
+          <option value="CIPM">CIPM — Certified Information Privacy Manager</option>
+          <option value="CIPT">CIPT — Certified Information Privacy Technologist</option>
+          <option value="FIP">FIP — Fellow of Information Privacy</option>
+        </optgroup>
+        <optgroup label="Audit / Risk / Compliance">
+          <option value="CIA">CIA — Certified Internal Auditor</option>
+          <option value="CRMA">CRMA — Certification in Risk Management Assurance</option>
+          <option value="CRCM">CRCM — Certified Regulatory Compliance Manager</option>
+          <option value="CGAP">CGAP — Certified Government Auditing Professional</option>
+        </optgroup>
+        <optgroup label="Other">
+          <option value="CEH-Master">CEH Master</option>
+          <option value="eWPT">eWPT — eLearnSecurity Web Application Penetration Tester</option>
+          <option value="eCPPT">eCPPT — eLearnSecurity Certified Professional Penetration Tester</option>
+          <option value="BTL1">BTL1 — Blue Team Labs Level 1</option>
+          <option value="BTL2">BTL2 — Blue Team Labs Level 2</option>
+        </optgroup>
+      </select>
+    </div>
     <div class="form-grid">
       <div>
         <label>Certification Name *</label>
@@ -659,6 +745,7 @@ function openCertModal(id) {
   editingId.certifications = id || null;
   const cert = id ? db.certifications.find(c => c.id === id) : null;
   document.getElementById('cert-modal-title').textContent = id ? 'Edit Certification' : 'Add Certification';
+  document.getElementById('cert-quickpick').value = '';
   document.getElementById('cert-name').value = cert?.name || '';
   document.getElementById('cert-body').value = cert?.body || '';
   document.getElementById('cert-start').value = cert?.start || '';
@@ -964,6 +1051,100 @@ function renderDashboard() {
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── CERT QUICK-PICK DATA ─────────────────────────────────────────────────────
+const CERT_PRESETS = {
+  // ISC²
+  'CISSP':        { name:'CISSP',         body:'ISC²',           cycleTotal:120, annualMin:40 },
+  'SSCP':         { name:'SSCP',          body:'ISC²',           cycleTotal:60,  annualMin:20 },
+  'CCSP':         { name:'CCSP',          body:'ISC²',           cycleTotal:90,  annualMin:30 },
+  'CSSLP':        { name:'CSSLP',         body:'ISC²',           cycleTotal:90,  annualMin:30 },
+  'CGRC':         { name:'CGRC',          body:'ISC²',           cycleTotal:90,  annualMin:30 },
+  'CISSP-ISSAP':  { name:'CISSP-ISSAP',   body:'ISC²',           cycleTotal:120, annualMin:40 },
+  'CISSP-ISSEP':  { name:'CISSP-ISSEP',   body:'ISC²',           cycleTotal:120, annualMin:40 },
+  'CISSP-ISSMP':  { name:'CISSP-ISSMP',   body:'ISC²',           cycleTotal:120, annualMin:40 },
+  // ISACA
+  'CISM':         { name:'CISM',          body:'ISACA',          cycleTotal:120, annualMin:20 },
+  'CISA':         { name:'CISA',          body:'ISACA',          cycleTotal:120, annualMin:20 },
+  'CRISC':        { name:'CRISC',         body:'ISACA',          cycleTotal:120, annualMin:20 },
+  'CDPSE':        { name:'CDPSE',         body:'ISACA',          cycleTotal:120, annualMin:20 },
+  'CGEIT':        { name:'CGEIT',         body:'ISACA',          cycleTotal:120, annualMin:20 },
+  // CompTIA
+  'Security+':    { name:'Security+',     body:'CompTIA',        cycleTotal:50,  annualMin:0  },
+  'CySA+':        { name:'CySA+',         body:'CompTIA',        cycleTotal:60,  annualMin:0  },
+  'PenTest+':     { name:'PenTest+',      body:'CompTIA',        cycleTotal:60,  annualMin:0  },
+  'CASP+':        { name:'CASP+',         body:'CompTIA',        cycleTotal:75,  annualMin:0  },
+  'Cloud+':       { name:'Cloud+',        body:'CompTIA',        cycleTotal:50,  annualMin:0  },
+  'Network+':     { name:'Network+',      body:'CompTIA',        cycleTotal:30,  annualMin:0  },
+  // EC-Council
+  'CEH':          { name:'CEH',           body:'EC-Council',     cycleTotal:120, annualMin:0  },
+  'CPENT':        { name:'CPENT',         body:'EC-Council',     cycleTotal:120, annualMin:0  },
+  'CHFI':         { name:'CHFI',          body:'EC-Council',     cycleTotal:120, annualMin:0  },
+  'CCISO':        { name:'CCISO',         body:'EC-Council',     cycleTotal:120, annualMin:0  },
+  'ECSA':         { name:'ECSA',          body:'EC-Council',     cycleTotal:120, annualMin:0  },
+  // GIAC
+  'GSEC':         { name:'GSEC',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GPEN':         { name:'GPEN',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GCIH':         { name:'GCIH',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GCIA':         { name:'GCIA',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GCFE':         { name:'GCFE',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GCFA':         { name:'GCFA',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GWAPT':        { name:'GWAPT',         body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GXPN':         { name:'GXPN',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GREM':         { name:'GREM',          body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  'GSTRT':        { name:'GSTRT',         body:'GIAC / SANS',    cycleTotal:36,  annualMin:0  },
+  // Offensive Security — no formal CPE renewal cycle; 3-yr industry convention used
+  'OSCP':         { name:'OSCP',          body:'Offensive Security', cycleTotal:0, annualMin:0 },
+  'OSEP':         { name:'OSEP',          body:'Offensive Security', cycleTotal:0, annualMin:0 },
+  'OSWE':         { name:'OSWE',          body:'Offensive Security', cycleTotal:0, annualMin:0 },
+  'OSED':         { name:'OSED',          body:'Offensive Security', cycleTotal:0, annualMin:0 },
+  'OSEE':         { name:'OSEE',          body:'Offensive Security', cycleTotal:0, annualMin:0 },
+  // Cloud
+  'AWS-SAA':      { name:'AWS Certified Solutions Architect – Associate', body:'Amazon Web Services', cycleTotal:0, annualMin:0 },
+  'AWS-SAP':      { name:'AWS Certified Solutions Architect – Professional', body:'Amazon Web Services', cycleTotal:0, annualMin:0 },
+  'AWS-SCS':      { name:'AWS Certified Security – Specialty', body:'Amazon Web Services', cycleTotal:0, annualMin:0 },
+  'AZ-500':       { name:'AZ-500 Azure Security Engineer',  body:'Microsoft',   cycleTotal:0, annualMin:0 },
+  'SC-200':       { name:'SC-200 Security Operations Analyst', body:'Microsoft', cycleTotal:0, annualMin:0 },
+  'SC-300':       { name:'SC-300 Identity and Access Administrator', body:'Microsoft', cycleTotal:0, annualMin:0 },
+  'GCP-PCSE':     { name:'Professional Cloud Security Engineer', body:'Google Cloud', cycleTotal:0, annualMin:0 },
+  // Privacy (IAPP — 2yr cycle, 20 CPE)
+  'CIPP/US':      { name:'CIPP/US',       body:'IAPP',           cycleTotal:20,  annualMin:0  },
+  'CIPP/E':       { name:'CIPP/E',        body:'IAPP',           cycleTotal:20,  annualMin:0  },
+  'CIPM':         { name:'CIPM',          body:'IAPP',           cycleTotal:20,  annualMin:0  },
+  'CIPT':         { name:'CIPT',          body:'IAPP',           cycleTotal:20,  annualMin:0  },
+  'FIP':          { name:'FIP',           body:'IAPP',           cycleTotal:20,  annualMin:0  },
+  // Audit / Risk
+  'CIA':          { name:'CIA',           body:'IIA',            cycleTotal:80,  annualMin:0  },
+  'CRMA':         { name:'CRMA',          body:'IIA',            cycleTotal:80,  annualMin:0  },
+  'CRCM':         { name:'CRCM',          body:'ABA',            cycleTotal:90,  annualMin:0  },
+  'CGAP':         { name:'CGAP',          body:'IIA',            cycleTotal:80,  annualMin:0  },
+  // Other
+  'CEH-Master':   { name:'CEH Master',    body:'EC-Council',     cycleTotal:120, annualMin:0  },
+  'eWPT':         { name:'eWPT',          body:'eLearnSecurity', cycleTotal:0,   annualMin:0  },
+  'eCPPT':        { name:'eCPPT',         body:'eLearnSecurity', cycleTotal:0,   annualMin:0  },
+  'BTL1':         { name:'BTL1',          body:'Security Blue Team', cycleTotal:0, annualMin:0 },
+  'BTL2':         { name:'BTL2',          body:'Security Blue Team', cycleTotal:0, annualMin:0 },
+};
+
+function applyQuickPick() {
+  const key = document.getElementById('cert-quickpick').value;
+  if (!key) return;
+  const p = CERT_PRESETS[key];
+  if (!p) return;
+  document.getElementById('cert-name').value = p.name;
+  document.getElementById('cert-body').value = p.body;
+  if (p.cycleTotal) document.getElementById('cert-cycle-total').value = p.cycleTotal;
+  if (p.annualMin) document.getElementById('cert-annual-min').value = p.annualMin;
+  // Default cycle start = today, end = 3 years out (2 for IAPP)
+  const today = new Date();
+  const years = p.body === 'IAPP' ? 2 : 3;
+  document.getElementById('cert-start').value = today.toISOString().slice(0,10);
+  const end = new Date(today);
+  end.setFullYear(end.getFullYear() + years);
+  end.setDate(end.getDate() - 1);
+  document.getElementById('cert-end').value = end.toISOString().slice(0,10);
+  toast('✅ Fields pre-filled — update dates and ID as needed.');
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
