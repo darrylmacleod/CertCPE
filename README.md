@@ -37,7 +37,7 @@ Log every CPE event with:
 |---|---|
 | Date | When the activity occurred |
 | Title | Name of the course, webinar, conference, etc. |
-| Provider | Issuing organisation (SANS, ISACA, Coursera, etc.) |
+| Provider | Issuing organization (SANS, ISACA, Coursera, etc.) |
 | Category | Training, Webinar, Conference, Self-Study, Research, Volunteer, Exam, Work Experience |
 | Hours | CPE hours earned |
 | Description | Brief summary of content |
