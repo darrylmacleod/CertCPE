@@ -37,7 +37,7 @@ Log every CPE event with:
 |---|---|
 | Date | When the activity occurred |
 | Title | Name of the course, webinar, conference, etc. |
-| Provider | Issuing organisation (SANS, ISACA, Coursera, etc.) |
+| Provider | Issuing organization (SANS, ISACA, Coursera, etc.) |
 | Category | Training, Webinar, Conference, Self-Study, Research, Volunteer, Exam, Work Experience |
 | Hours | CPE hours earned |
 | Description | Brief summary of content |
@@ -116,7 +116,6 @@ Then refresh the page.
 |---|---|---|---|---|
 | CISSP | ISC² | 3 | 120 | 40 |
 | CISM | ISACA | 3 | 120 | 20 |
-| CEH | EC-Council | 3 | 120 | — |
 | CISA | ISACA | 3 | 120 | 20 |
 | CRISC | ISACA | 3 | 120 | 20 |
 
